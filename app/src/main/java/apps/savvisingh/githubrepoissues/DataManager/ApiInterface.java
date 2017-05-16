@@ -4,6 +4,7 @@ import java.util.List;
 
 
 import apps.savvisingh.githubrepoissues.model.Issue;
+import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import retrofit2.http.GET;
 import retrofit2.http.Path;

@@ -18,14 +18,10 @@ import apps.savvisingh.githubrepoissues.DataManager.ApiClient;
 import apps.savvisingh.githubrepoissues.DataManager.ApiInterface;
 import apps.savvisingh.githubrepoissues.adapter.DataAdapter;
 import apps.savvisingh.githubrepoissues.model.Issue;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.PublishSubject;
 import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity {
@@ -40,6 +36,10 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText editText;
 
+    private CompositeDisposable composite;
+
+    private Disposable searchDisposable;
+
     private Button button;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
 
         initRecyclerView();
 
+        composite = new CompositeDisposable();
+
         editText = (EditText) findViewById(R.id.searchQuery);
         button  =(Button) findViewById(R.id.search);
 
@@ -55,59 +57,39 @@ public class MainActivity extends AppCompatActivity {
 
         final ApiInterface GitHubAPI = retrofit.create(ApiInterface.class);
 
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String s = editText.getText().toString();
-                String[] ss = s.split("/");
-                Observable<List<Issue>> issueTracker = GitHubAPI.getIssues(ss[0], ss[1], "open");
+        button.setOnClickListener(view -> {
+            String s = editText.getText().toString();
+            String[] ss = s.split("/");
 
-                issueTracker.subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new Observer<List<Issue>>() {
-                            @Override
-                            public void onSubscribe(Disposable d) {
 
-                            }
-
-                            @Override
-                            public void onNext(List<Issue> value) {
-                                mIssuesList.clear();
-                                mIssuesList.addAll(value);
-                                mAdapter.notifyDataSetChanged();
-                            }
-
-                            @Override
-                            public void onError(Throwable e) {
-                                Log.d("Error", " " + e.getLocalizedMessage());
-                                Snackbar snackbar = Snackbar
-                                        .make(findViewById(R.id.coordinatorLayout), "No such User and Repo", Snackbar.LENGTH_LONG);
-                                snackbar.show();
-                            }
-
-                            @Override
-                            public void onComplete() {
-
-                            }
-                        });
+            if(searchDisposable!=null){
+                searchDisposable.dispose();
             }
+            searchDisposable = GitHubAPI.getIssues(ss[0], ss[1], "open")
+                                .subscribeOn(Schedulers.computation())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(searchResponse ->
+                                loadData(searchResponse)
+                                , throwable -> onError(throwable));
+
+
+
         });
-
-//        PublishSubject<String> publishSubject  = PublishSubject.create();
-//
-//        publishSubject.subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .flatMap(new Function<String, ObservableSource<?>>() {
-//            @Override
-//            public ObservableSource<?> apply(String s) throws Exception {
-//
-//                return GitHubAPI.getIssues("square", "retrofit", "open");;
-//            }
-//        }).subscribe(new Observer<Object>() {
-//        });
+    }
 
 
 
+    public void loadData(List<Issue> issues){
+            mIssuesList.clear();
+            mIssuesList.addAll(issues);
+            mAdapter.notifyDataSetChanged();
+    }
+
+    public void onError(Throwable e) {
+        Log.d("Error", " " + e.getLocalizedMessage());
+        Snackbar snackbar = Snackbar
+                .make(findViewById(R.id.coordinatorLayout), "No such User and Repo", Snackbar.LENGTH_LONG);
+        snackbar.show();
     }
 
     private void initRecyclerView() {
@@ -121,5 +103,12 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new DataAdapter(mIssuesList);
         mRecyclerView.setAdapter(mAdapter);
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(searchDisposable !=null && !searchDisposable.isDisposed())
+            searchDisposable.dispose();
     }
 }
