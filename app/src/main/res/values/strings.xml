@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">GitHubRepoIssues</string>
+    <string name="editTextHint">username/repository</string>
+    <string name="ButtonText">Search</string>
+    <string name="no_issues_text">No issues for this Repo, Try another one</string>
 </resources>
