@@ -1,4 +1,4 @@
-package apps.savvisingh.githubrepoissues.model;
+package apps.savvisingh.githubrepoissues.DataModel.networking.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

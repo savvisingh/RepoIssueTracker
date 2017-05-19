@@ -9,7 +9,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import apps.savvisingh.githubrepoissues.R;
-import apps.savvisingh.githubrepoissues.model.Issue;
+import apps.savvisingh.githubrepoissues.DataModel.networking.model.Issue;
 
 /**
  * Created by SavviSingh on 15/05/17.

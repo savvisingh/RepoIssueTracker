@@ -1,6 +1,5 @@
 package apps.savvisingh.githubrepoissues;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -19,14 +18,11 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
-import apps.savvisingh.githubrepoissues.DataManager.ApiClient;
-import apps.savvisingh.githubrepoissues.DataManager.ApiInterface;
+import apps.savvisingh.githubrepoissues.DataModel.DataModel;
 import apps.savvisingh.githubrepoissues.adapter.DataAdapter;
-import apps.savvisingh.githubrepoissues.model.Issue;
+import apps.savvisingh.githubrepoissues.DataModel.networking.model.Issue;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity {
@@ -41,8 +37,6 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText editText;
 
-    private CompositeDisposable composite;
-
     private Disposable searchDisposable;
 
     private Button button;
@@ -50,14 +44,16 @@ public class MainActivity extends AppCompatActivity {
     private TextView noIssueText, noSearchText;
 
     private ProgressBar mProgressDialog;
+
+    private DataModel dataModel;
+    private ViewModel viewModel;
+
+   // private final PublishSubject<String> publishSubject = PublishSubject.create();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-
-        composite = new CompositeDisposable();
 
         editText = (EditText) findViewById(R.id.searchQuery);
         button  =(Button) findViewById(R.id.search);
@@ -67,44 +63,61 @@ public class MainActivity extends AppCompatActivity {
 
         initRecyclerView();
 
-        retrofit = ApiClient.getClient();
 
-        final ApiInterface GitHubAPI = retrofit.create(ApiInterface.class);
+        dataModel = new DataModel();
+        viewModel = new ViewModel(dataModel);
 
         button.setOnClickListener(view -> {
 
             InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
 
-            String s = editText.getText().toString();
-            String[] ss = s.split("/");
+            viewModel.searchQuery(editText.getText().toString());
 
+//            publishSubject.onNext(editText.getText().toString());
 
             mRecyclerView.setVisibility(View.INVISIBLE);
             noSearchText.setVisibility(View.INVISIBLE);
             noIssueText.setVisibility(View.INVISIBLE);
             mProgressDialog.setVisibility(View.VISIBLE);
 
-            if(searchDisposable!=null){
-                searchDisposable.dispose();
-            }
-            searchDisposable = GitHubAPI.getIssues(ss[0], ss[1], "open")
-                                .subscribeOn(Schedulers.computation())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe(searchResponse ->
-                                loadData(searchResponse)
-                                , throwable -> onError(throwable));
+
+
+//            if(searchDisposable!=null){
+//                searchDisposable.dispose();
+//            }
+//            searchDisposable = GitHubAPI.getIssues(ss[0], ss[1], "open")
+//                                .subscribeOn(Schedulers.computation())
+//                                .observeOn(AndroidSchedulers.mainThread())
+//                                .subscribe(this::loadData
+//                                , this::onError);
 
 
 
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        searchDisposable = viewModel.getResults()
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(this::loadData
+                                    , this::onError);
 
+//        publishSubject.
+//                concatMap(dataModel::getIssues)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(this::loadData, this::onError);
+
+    }
+
+    public void showSomething(List<Issue> data){
+        Toast.makeText(this, data.size() + " ", Toast.LENGTH_SHORT).show();
+    }
 
     public void loadData(List<Issue> issues){
-
-
 
         mProgressDialog.setVisibility(View.INVISIBLE);
 
