@@ -44,8 +44,6 @@ public class DataModel implements DataModelInterface {
         //put something inside the map, could be null
         map.put("body", comment);
 
-        RequestBody body = RequestBody.create(okhttp3.MediaType.parse("application/json; charset=utf-8"),(new JSONObject(map)).toString());
-
 
         return gitHubApiService.postComment(user, repo, issueNumber, map).subscribeOn(Schedulers.io());
     }

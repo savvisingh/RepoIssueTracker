@@ -29,7 +29,7 @@ public class ApiClient {
             Request original = chain.request();
 
             Request request = original.newBuilder()
-                    .header("Authorization", "token 5fd830ed815a232713d546f223a54c0251f37af9")
+                    //.header("Authorization", "token 78f31d2822f2b5e4662a1e5c82cea066e66c27ff")
                     .method(original.method(), original.body())
                     .build();
 
