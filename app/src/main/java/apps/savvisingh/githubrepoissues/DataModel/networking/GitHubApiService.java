@@ -1,9 +1,13 @@
 package apps.savvisingh.githubrepoissues.DataModel.networking;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import apps.savvisingh.githubrepoissues.DataModel.networking.model.Comment;
 import apps.savvisingh.githubrepoissues.DataModel.networking.model.Issue;
 import io.reactivex.Observable;
+import okhttp3.RequestBody;
 import retrofit2.Retrofit;
 
 /**
@@ -24,5 +28,9 @@ public class GitHubApiService {
 
         return gitHubApiInterface.getIssues(user, repo, type);
 
+    }
+
+    public Observable<Comment> postComment(String user, String repo, String issue, HashMap<String, String> comment){
+        return  gitHubApiInterface.postComment(user, repo, issue, comment);
     }
 }

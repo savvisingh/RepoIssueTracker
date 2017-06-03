@@ -1,12 +1,15 @@
 package apps.savvisingh.githubrepoissues;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -19,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apps.savvisingh.githubrepoissues.DataModel.DataModel;
+import apps.savvisingh.githubrepoissues.DataModel.networking.model.Comment;
 import apps.savvisingh.githubrepoissues.adapter.DataAdapter;
 import apps.savvisingh.githubrepoissues.DataModel.networking.model.Issue;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -38,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
 
     private Disposable searchDisposable;
+
+    private Disposable postCommentDisposable;
 
     private Button button;
 
@@ -159,6 +165,47 @@ public class MainActivity extends AppCompatActivity {
         noSearchText.setVisibility(View.VISIBLE);
         //mProgressDialog.setVisibility(View.INVISIBLE);
 
+        mAdapter.setItemClickListener((v, position) -> {
+
+            Log.d("ItemClick ", "here");
+
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            LayoutInflater inflater = this.getLayoutInflater();
+            final View dialogView = inflater.inflate(R.layout.custom_dialog, null, false);
+            dialogBuilder.setView(dialogView);
+
+            final EditText commenttext = (EditText) dialogView.findViewById(R.id.comment);
+
+            dialogBuilder.setTitle("Post Comment");
+            dialogBuilder.setMessage("");
+            dialogBuilder.setPositiveButton("Done", (dialog, whichButton) -> {
+                //do something with edt.getText().toString();
+                Log.d("Comment", commenttext.getText().toString());
+
+                String[] search = this.editText.getText().toString().split("/");
+
+                postCommentDisposable = dataModel.postIssue(search[0], search[1],
+                        String.valueOf(mIssuesList.get(position).getNumber()), commenttext.getText().toString())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(this::showSuccess
+                                , this::onError);
+
+            });
+            dialogBuilder.setNegativeButton("Cancel", (dialog, whichButton) -> {
+                //pass
+            });
+            AlertDialog b = dialogBuilder.create();
+            b.show();
+
+        });
+
+
+    }
+
+    private void showSuccess(Comment comment) {
+        Snackbar snackbar = Snackbar
+                .make(findViewById(R.id.coordinatorLayout), "Comment Added", Snackbar.LENGTH_LONG);
+        snackbar.show();
 
     }
 

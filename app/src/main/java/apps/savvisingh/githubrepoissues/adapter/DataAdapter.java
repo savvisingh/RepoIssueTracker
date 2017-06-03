@@ -23,6 +23,8 @@ public class DataAdapter  extends RecyclerView.Adapter<DataAdapter.ViewHolder> {
         mIssueList = androidList;
     }
 
+    public ItemClickListener mListener;
+
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
@@ -41,12 +43,16 @@ public class DataAdapter  extends RecyclerView.Adapter<DataAdapter.ViewHolder> {
 
     }
 
+    public void setItemClickListener(ItemClickListener listener){
+        this.mListener = listener;
+    }
+
     @Override
     public int getItemCount() {
         return mIssueList.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder{
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
         private TextView mIssueTitle;
         private TextView mIssueId;
@@ -58,6 +64,19 @@ public class DataAdapter  extends RecyclerView.Adapter<DataAdapter.ViewHolder> {
             mIssueId = (TextView)view.findViewById(R.id.issue_id);
             mIssueOpenedBy = (TextView)view.findViewById(R.id.issue_opened_by_username);
 
+            view.setOnClickListener(this);
+
         }
+
+        @Override
+        public void onClick(View view) {
+            if(mListener!= null){
+                mListener.onClick(view, getAdapterPosition());
+            }
+        }
+    }
+
+    public interface ItemClickListener{
+         void onClick(View v, int position);
     }
 }
